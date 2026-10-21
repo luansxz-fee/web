@@ -3,8 +3,9 @@
 ## Setup
 
 ```
-cd medsync-backend
+cd back
 npm install
+cmd
 npm run setup-db
 npm run dev
 ```

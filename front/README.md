@@ -4,8 +4,10 @@
 
 ### 1. Instalar dependências
 ```bash
-cd medsync
+cd front
 npm install
+cmd
+npm run dev
 ```
 
 ### 2. Configurar API
