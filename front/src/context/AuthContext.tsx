@@ -96,16 +96,7 @@ function extrairUsuarioResposta(
   res: any,
   fallback: User | null = null
 ): User | null {
-  /*
-   * O backend pode devolver o usuário em formatos
-   * diferentes dependendo da rota:
-   *
-   * { usuario: {...} }
-   * { dados: {...} }
-   * { dados: { usuario: {...} } }
-   *
-   * Nunca acessamos res.usuario.nome diretamente.
-   */
+  
   const bruto =
     res?.usuario ??
     res?.dados?.usuario ??
@@ -126,10 +117,7 @@ function salvarSessao(
     JSON.stringify(u)
   );
 
-  /*
-   * Mantém compatibilidade com partes antigas
-   * do frontend que ainda consultam medsync_usuario.
-   */
+  
   localStorage.setItem(
     CHAVE_USUARIO,
     JSON.stringify(u)
@@ -343,21 +331,13 @@ export function AuthProvider({
       );
     }
 
-    /*
-     * O backend recebe "nome", não "name".
-     */
     const res =
       await api.auth.atualizarEu({
         nome: nomeNovo,
         avatar: avatarNovo,
       });
 
-    /*
-     * NÃO usamos res.usuario.nome diretamente.
-     * Se o backend não devolver o usuário,
-     * mantemos o usuário atual e aplicamos
-     * o nome que acabou de ser salvo.
-     */
+    
     const resposta =
       extrairUsuarioResposta(
         res,
