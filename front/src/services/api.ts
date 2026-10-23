@@ -187,13 +187,17 @@ export const api = {
         `/medicamentos/${id}`
       ),
 
+    
     alternar: (id: number | string) =>
       requisicao<{
+        sucesso?: boolean;
         dados: any;
+        mensagem?: string;
       }>(
         'PATCH',
         `/medicamentos/${id}/alternar`
       ),
+
   },
 
   registros: {

@@ -1,5 +1,5 @@
-const router = require('express').Router();
 
+const router = require('express').Router();
 const { body } = require('express-validator');
 
 const ctrl = require('../controllers/MedicationController.js');
@@ -59,9 +59,7 @@ const validacoesMedicamento = [
   body('urlImagem')
     .optional({ nullable: true })
     .custom((val) => {
-      if (!val || val === '') {
-        return true;
-      }
+      if (!val || val === '') return true;
 
       try {
         new URL(val);
@@ -73,7 +71,6 @@ const validacoesMedicamento = [
 ];
 
 router.get('/', ctrl.listar);
-
 router.get('/:id', ctrl.buscar);
 
 router.post(
@@ -90,8 +87,8 @@ router.put(
   ctrl.atualizar
 );
 
-router.delete('/:id', ctrl.excluir);
-
 router.patch('/:id/alternar', ctrl.alternarAtivo);
+
+router.delete('/:id', ctrl.excluir);
 
 module.exports = router;
