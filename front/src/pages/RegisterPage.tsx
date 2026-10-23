@@ -17,7 +17,8 @@ export default function RegisterPage({ navigate }: Props) {
   const [carregando, setCarregando] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  const forca = senha.length === 0 ? 0 : senha.length < 6 ? 1 : senha.length < 10 ? 2 : 3;
+  const senhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(senha);
+  const forca = senha.length === 0 ? 0 : senhaForte ? 3 : senha.length >= 8 ? 2 : 1;
   const forcaLabel = ['', 'Fraca', 'Media', 'Forte'];
   const forcaCor = ['', '#EF4444', '#F59E0B', '#10B981'];
 
@@ -25,7 +26,10 @@ export default function RegisterPage({ navigate }: Props) {
     e.preventDefault();
     if (!nome || !email || !senha) { setErro('Preencha todos os campos.'); return; }
     if (senha !== confirmar) { setErro('As senhas nao coincidem.'); return; }
-    if (senha.length < 6) { setErro('A senha deve ter pelo menos 6 caracteres.'); return; }
+    if (!senhaForte) {
+      setErro('Use no mínimo 10 caracteres, com letra maiúscula, minúscula, número e caractere especial.');
+      return;
+    }
     setCarregando(true);
     setErro('');
     try {
@@ -78,7 +82,7 @@ export default function RegisterPage({ navigate }: Props) {
               <div className="input-wrap">
                 <input
                   type={mostrarSenha ? 'text' : 'password'}
-                  placeholder="Minimo 6 caracteres"
+                  placeholder="Mín. 10 caracteres, maiúscula, número e símbolo"
                   value={senha}
                   onChange={e => setSenha(e.target.value)}
                   autoComplete="new-password"
@@ -87,6 +91,7 @@ export default function RegisterPage({ navigate }: Props) {
                   {mostrarSenha ? '🔒' : '🔓'}
                 </button>
               </div>
+              <p className="form-hint">A senha precisa ter pelo menos 10 caracteres, uma letra maiúscula, uma minúscula, um número e um símbolo.</p>
               {senha && (
                 <div className="password-strength">
                   <div className="password-strength__bar">

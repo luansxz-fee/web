@@ -25,6 +25,7 @@ export interface Medication {
   icon?: string;
   imageUrl?: string;
   prescribedBy?: string;
+  doctorCrm?: string;
   startDate?: string;
   endDate?: string;
   reminderEnabled?: boolean;

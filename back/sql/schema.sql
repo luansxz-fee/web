@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS medicamentos (
   estoque_maximo INT NOT NULL DEFAULT 30,
   instrucoes TEXT DEFAULT NULL,
   medico_prescritor VARCHAR(100) DEFAULT NULL,
+  crm_medico VARCHAR(30) DEFAULT NULL,
   efeitos_colaterais TEXT DEFAULT NULL,
   lembrete_ativo TINYINT(1) NOT NULL DEFAULT 1,
   ativo TINYINT(1) NOT NULL DEFAULT 1,

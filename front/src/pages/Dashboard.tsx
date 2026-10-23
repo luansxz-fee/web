@@ -26,21 +26,8 @@ export default function Dashboard({ navigate }: Props) {
     return currentMinutes > scheduledMinutes;
   };
 
-  // 🚨 AUTO-REGISTRO DE DOSES PERDIDAS
-  // Sempre que o horário passar sem ação do usuário, salva automaticamente como 'missed' (PERDIDO)
-  useEffect(() => {
-    const checkMissedDoses = () => {
-      today.forEach(({ medication, log, scheduledTime }) => {
-        if (!log && isTimePassed(scheduledTime)) {
-          logDose(medication.id, scheduledTime, 'missed');
-        }
-      });
-    };
-
-    checkMissedDoses();
-    const interval = setInterval(checkMissedDoses, 30000); // Executa a cada 30 segundos
-    return () => clearInterval(interval);
-  }, [today, logDose]);
+  // As doses perdidas são registradas pelo MedContext somente
+  // quando a data de início/término permite o tratamento.
 
   const adherence7 = getAdherenceRate(7);
   const adherence30 = getAdherenceRate(30);

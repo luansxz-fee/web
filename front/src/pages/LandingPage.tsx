@@ -138,7 +138,7 @@ export default function LandingPage({ navigate }: Props) {
 
       <footer className="landing-footer">
         <Logo size="sm" />
-        <p>© 2025 MedSync. Feito com cuidado para sua saúde.</p>
+        <p>© {new Date().getFullYear()} MedSync. Feito com cuidado para sua saúde.</p>
         <div className="landing-footer__links">
           <a href="#">Privacidade</a>
           <a href="#">Termos</a>

@@ -35,6 +35,7 @@ export default function MedModal({ medication, onClose }: Props) {
   const [stockMax,        setStockMax]        = useState(medication?.stockMax        ?? 30);
   const [reminderEnabled, setReminderEnabled] = useState(medication?.reminderEnabled ?? true);
   const [prescribedBy,    setPrescribedBy]    = useState(medication?.prescribedBy    || '');
+  const [doctorCrm,       setDoctorCrm]       = useState(medication?.doctorCrm       || '');
   const [sideEffects,     setSideEffects]     = useState(medication?.sideEffects     || '');
 
   const [imageUrl,  setImageUrl]  = useState(medication?.imageUrl || '');
@@ -83,6 +84,7 @@ export default function MedModal({ medication, onClose }: Props) {
       color, icon, category, stock, stockMax, reminderEnabled, active: true,
       imageUrl: (imgStatus === 'ok' && imageUrl.trim()) ? imageUrl.trim() : undefined,
       prescribedBy: prescribedBy.trim() || undefined,
+      doctorCrm: doctorCrm.trim() || undefined,
       sideEffects:  sideEffects.trim()  || undefined,
     };
     if (isEdit && medication) updateMedication(medication.id, data);
@@ -211,6 +213,18 @@ export default function MedModal({ medication, onClose }: Props) {
               <div className="form-group">
                 <label>Médico prescritor (opcional)</label>
                 <input type="text" placeholder="Ex: Dra. Ana Souza" value={prescribedBy} onChange={e => setPrescribedBy(e.target.value)} />
+              </div>
+
+              <div className="form-group">
+                <label>CRM do médico (opcional)</label>
+                <input
+                  type="text"
+                  placeholder="Ex: CRM-SP 123456"
+                  value={doctorCrm}
+                  onChange={e => setDoctorCrm(e.target.value)}
+                  autoComplete="off"
+                />
+                <p className="form-hint">Informe a sigla do estado e o número do CRM conforme a receita.</p>
               </div>
 
               <div className="form-group">

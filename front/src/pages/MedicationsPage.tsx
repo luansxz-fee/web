@@ -216,6 +216,7 @@ export default function MedicationsPage() {
                 <div className="detail-row"><span>Início</span><strong>{new Date(detailMed.startDate+'T12:00').toLocaleDateString('pt-BR')}</strong></div>
                 {detailMed.endDate && <div className="detail-row"><span>Término</span><strong>{new Date(detailMed.endDate+'T12:00').toLocaleDateString('pt-BR')}</strong></div>}
                 {detailMed.prescribedBy && <div className="detail-row"><span>Médico</span><strong>{detailMed.prescribedBy}</strong></div>}
+                {detailMed.doctorCrm && <div className="detail-row"><span>CRM do médico</span><strong>{detailMed.doctorCrm}</strong></div>}
                 <div className="detail-row"><span>Estoque</span><strong>{detailMed.stock} unidades</strong></div>
                 <div className="detail-row"><span>Lembretes</span><strong>{detailMed.reminderEnabled ? 'Ativados ✓' : 'Desativados'}</strong></div>
                 <div className="detail-row"><span>Status</span><strong>{detailMed.active ? '✅ Ativo' : '⏸️ Inativo'}</strong></div>

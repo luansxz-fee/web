@@ -392,6 +392,11 @@ export const MedProvider: React.FC<{
         item.medico ||
         item.prescribedBy,
 
+      doctorCrm:
+        item.crmMedico ||
+        item.crm_medico ||
+        item.doctorCrm,
+
       startDate:
         item.dataInicio ||
         item.startDate ||
@@ -601,6 +606,12 @@ export const MedProvider: React.FC<{
         med.prescribedBy ||
         med.medicoPrescritor ||
         med.medico ||
+        null,
+
+      crmMedico:
+        med.doctorCrm ||
+        med.crmMedico ||
+        med.crm_medico ||
         null,
 
       instrucoes:
@@ -1373,9 +1384,13 @@ export const MedProvider: React.FC<{
           getTodayString();
 
         medications
-          .filter(
-            m => m.active
-          )
+          .filter(m => {
+            if (!m.active) return false;
+            const today = getTodayString();
+            const start = normalizeDate(m.startDate);
+            const end = m.endDate ? normalizeDate(m.endDate) : null;
+            return start <= today && (!end || end >= today);
+          })
           .forEach(med => {
             (
               med.times || []
@@ -1456,9 +1471,12 @@ export const MedProvider: React.FC<{
         [];
 
       medications
-        .filter(
-          m => m.active
-        )
+        .filter(m => {
+          if (!m.active) return false;
+          const start = normalizeDate(m.startDate);
+          const end = m.endDate ? normalizeDate(m.endDate) : null;
+          return start <= todayStr && (!end || end >= todayStr);
+        })
         .forEach(med => {
           (
             med.times || []

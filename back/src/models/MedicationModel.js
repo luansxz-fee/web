@@ -95,6 +95,12 @@ const medicamentoSchema = new mongoose.Schema(
       default: null,
     },
 
+    crm_medico: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+
     efeitos_colaterais: {
       type: String,
       default: null,
@@ -163,6 +169,9 @@ const MedicamentoModel = {
 
       medicoPrescritor:
         doc.medico_prescritor || null,
+
+      crmMedico:
+        doc.crm_medico || null,
 
       efeitosColaterais:
         doc.efeitos_colaterais || null,
@@ -256,6 +265,9 @@ const MedicamentoModel = {
       medico_prescritor:
         dados.medicoPrescritor || null,
 
+      crm_medico:
+        dados.crmMedico || dados.doctorCrm || null,
+
       efeitos_colaterais:
         dados.efeitosColaterais || null,
     });
@@ -291,6 +303,8 @@ const MedicamentoModel = {
       ativo: 'ativo',
       urlImagem: 'url_imagem',
       medicoPrescritor: 'medico_prescritor',
+      crmMedico: 'crm_medico',
+      doctorCrm: 'crm_medico',
       efeitosColaterais: 'efeitos_colaterais',
     };
 

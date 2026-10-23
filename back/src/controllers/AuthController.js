@@ -32,6 +32,14 @@ const AuthController = {
         senha,
       } = req.body;
 
+      const senhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
+      if (typeof senha !== 'string' || !senhaForte.test(senha)) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'A senha deve ter no mínimo 10 caracteres, com maiúscula, minúscula, número e caractere especial.',
+        });
+      }
+
       const existe =
         await UsuarioModel.buscarPorEmail(
           email
@@ -317,6 +325,14 @@ const AuthController = {
         token,
         novaSenha,
       } = req.body;
+
+      const senhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/;
+      if (typeof novaSenha !== 'string' || !senhaForte.test(novaSenha)) {
+        return res.status(400).json({
+          sucesso: false,
+          mensagem: 'A nova senha deve ter no mínimo 10 caracteres, com maiúscula, minúscula, número e caractere especial.',
+        });
+      }
 
       const registro =
         await TokenModel.buscarValido(
