@@ -75,6 +75,7 @@ const RegistroDoseModel = {
         : doc.usuarioId,
 
       horarioAgendado: doc.horario_agendado,
+
       tomadoEm: doc.tomado_em
         ? new Date(doc.tomado_em).toISOString()
         : null,
@@ -98,13 +99,20 @@ const RegistroDoseModel = {
       usuario_id: usuarioId,
     };
 
-    if (dias && Number.isFinite(Number(dias)) && Number(dias) > 0) {
+    if (
+      dias &&
+      Number.isFinite(Number(dias)) &&
+      Number(dias) > 0
+    ) {
       const dataLimite = new Date();
+
       dataLimite.setDate(
         dataLimite.getDate() - Number(dias)
       );
 
-      const limiteStr = dataLimite.toISOString().split('T')[0];
+      const limiteStr = dataLimite
+        .toISOString()
+        .split('T')[0];
 
       filtro.data_dose = {
         $gte: limiteStr,
@@ -114,6 +122,7 @@ const RegistroDoseModel = {
     const documentos = await RegistroDose.find(filtro).sort({
       data_dose: -1,
       horario_agendado: -1,
+      atualizado_em: -1,
     });
 
     return documentos.map((doc) => this.formatar(doc));
@@ -131,6 +140,7 @@ const RegistroDoseModel = {
       data_dose: hoje,
     }).sort({
       horario_agendado: 1,
+      atualizado_em: -1,
     });
 
     return documentos.map((doc) => this.formatar(doc));
@@ -155,7 +165,6 @@ const RegistroDoseModel = {
     const tomadoEm =
       situacao === 'tomada' ? new Date() : null;
 
-    // Busca somente o registro pertencente ao usuário atual.
     const filtro = {
       usuario_id: usuarioId,
       medicamento_id: medicamentoId,
@@ -163,29 +172,40 @@ const RegistroDoseModel = {
       horario_agendado: horarioAgendado,
     };
 
-    const existente = await RegistroDose.findOne(filtro);
-
-    if (existente) {
-      existente.situacao = situacao;
-      existente.tomado_em = tomadoEm;
-      existente.observacao = observacao;
-
-      const atualizado = await existente.save();
-
-      return this.formatar(atualizado);
-    }
-
-    const novoRegistro = await RegistroDose.create({
-      usuario_id: usuarioId,
-      medicamento_id: medicamentoId,
-      horario_agendado: horarioAgendado,
-      tomado_em: tomadoEm,
+    const dadosAtualizados = {
       situacao,
-      data_dose: hoje,
+      tomado_em: tomadoEm,
       observacao,
-    });
+    };
 
-    return this.formatar(novoRegistro);
+    // Atualiza o registro existente ou cria um novo.
+    const registro = await RegistroDose.findOneAndUpdate(
+      filtro,
+      {
+        $set: dadosAtualizados,
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+        runValidators: true,
+      }
+    );
+
+    // Sincroniza registros duplicados antigos do mesmo horário.
+    await RegistroDose.updateMany(
+      {
+        ...filtro,
+        _id: {
+          $ne: registro._id,
+        },
+      },
+      {
+        $set: dadosAtualizados,
+      }
+    );
+
+    return this.formatar(registro);
   },
 
   async taxaAdesao(usuarioId, dias = 7) {
@@ -203,11 +223,14 @@ const RegistroDoseModel = {
     }
 
     const dataLimite = new Date();
+
     dataLimite.setDate(
       dataLimite.getDate() - quantidadeDias
     );
 
-    const limiteStr = dataLimite.toISOString().split('T')[0];
+    const limiteStr = dataLimite
+      .toISOString()
+      .split('T')[0];
 
     const filtro = {
       usuario_id: usuarioId,
@@ -246,5 +269,3 @@ const RegistroDoseModel = {
 };
 
 module.exports = RegistroDoseModel;
-
-// tentar
