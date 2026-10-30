@@ -95,10 +95,11 @@ const medicamentoSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Novo campo: CRM do médico.
     crm_medico: {
       type: String,
-      trim: true,
       default: null,
+      trim: true,
     },
 
     efeitos_colaterais: {
@@ -170,6 +171,7 @@ const MedicamentoModel = {
       medicoPrescritor:
         doc.medico_prescritor || null,
 
+      // Retorna o CRM para o frontend.
       crmMedico:
         doc.crm_medico || null,
 
@@ -265,8 +267,11 @@ const MedicamentoModel = {
       medico_prescritor:
         dados.medicoPrescritor || null,
 
+      // Salva o CRM do médico.
       crm_medico:
-        dados.crmMedico || dados.doctorCrm || null,
+        dados.crmMedico
+          ? dados.crmMedico.trim()
+          : null,
 
       efeitos_colaterais:
         dados.efeitosColaterais || null,
@@ -303,8 +308,10 @@ const MedicamentoModel = {
       ativo: 'ativo',
       urlImagem: 'url_imagem',
       medicoPrescritor: 'medico_prescritor',
+
+      // Permite atualizar o CRM.
       crmMedico: 'crm_medico',
-      doctorCrm: 'crm_medico',
+
       efeitosColaterais: 'efeitos_colaterais',
     };
 
@@ -315,7 +322,10 @@ const MedicamentoModel = {
     )) {
       if (dados[chave] === undefined) continue;
 
-      atualizacao[campo] = dados[chave];
+      atualizacao[campo] =
+        chave === 'crmMedico' && dados[chave]
+          ? dados[chave].trim()
+          : dados[chave];
     }
 
     if (

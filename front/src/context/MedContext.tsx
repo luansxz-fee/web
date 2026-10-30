@@ -184,6 +184,26 @@ const normalizeDate = (
   return str.slice(0, 10);
 };
 
+const isMedicationScheduledOnDate = (
+  medication: Medication,
+  date: string
+): boolean => {
+  const startDate = medication.startDate
+    ? normalizeDate(medication.startDate)
+    : '';
+  const endDate = medication.endDate
+    ? normalizeDate(medication.endDate)
+    : '';
+
+  // Não cria doses antes do primeiro dia do tratamento.
+  if (startDate && date < startDate) return false;
+
+  // Não cria doses após o último dia do tratamento.
+  if (endDate && date > endDate) return false;
+
+  return true;
+};
+
 const normalizeTime = (
   t?: any
 ): string => {
@@ -392,10 +412,10 @@ export const MedProvider: React.FC<{
         item.medico ||
         item.prescribedBy,
 
-      doctorCrm:
+      crmMedico:
         item.crmMedico ||
         item.crm_medico ||
-        item.doctorCrm,
+        '',
 
       startDate:
         item.dataInicio ||
@@ -609,7 +629,6 @@ export const MedProvider: React.FC<{
         null,
 
       crmMedico:
-        med.doctorCrm ||
         med.crmMedico ||
         med.crm_medico ||
         null,
@@ -1384,13 +1403,10 @@ export const MedProvider: React.FC<{
           getTodayString();
 
         medications
-          .filter(m => {
-            if (!m.active) return false;
-            const today = getTodayString();
-            const start = normalizeDate(m.startDate);
-            const end = m.endDate ? normalizeDate(m.endDate) : null;
-            return start <= today && (!end || end >= today);
-          })
+          .filter(
+            m => m.active &&
+              isMedicationScheduledOnDate(m, todayStr)
+          )
           .forEach(med => {
             (
               med.times || []
@@ -1471,12 +1487,10 @@ export const MedProvider: React.FC<{
         [];
 
       medications
-        .filter(m => {
-          if (!m.active) return false;
-          const start = normalizeDate(m.startDate);
-          const end = m.endDate ? normalizeDate(m.endDate) : null;
-          return start <= todayStr && (!end || end >= todayStr);
-        })
+        .filter(
+          m => m.active &&
+            isMedicationScheduledOnDate(m, todayStr)
+        )
         .forEach(med => {
           (
             med.times || []

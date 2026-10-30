@@ -1,4 +1,3 @@
-
 const router = require('express').Router();
 const { body } = require('express-validator');
 
@@ -68,9 +67,16 @@ const validacoesMedicamento = [
         throw new Error('URL da imagem invalida');
       }
     }),
+
+  body('crmMedico')
+    .optional({ nullable: true })
+    .trim()
+    .isLength({ max: 30 })
+    .withMessage('CRM do medico deve ter no maximo 30 caracteres'),
 ];
 
 router.get('/', ctrl.listar);
+
 router.get('/:id', ctrl.buscar);
 
 router.post(
@@ -87,8 +93,14 @@ router.put(
   ctrl.atualizar
 );
 
-router.patch('/:id/alternar', ctrl.alternarAtivo);
+router.patch(
+  '/:id/alternar',
+  ctrl.alternarAtivo
+);
 
-router.delete('/:id', ctrl.excluir);
+router.delete(
+  '/:id',
+  ctrl.excluir
+);
 
 module.exports = router;

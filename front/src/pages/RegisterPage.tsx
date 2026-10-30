@@ -17,17 +17,25 @@ export default function RegisterPage({ navigate }: Props) {
   const [carregando, setCarregando] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  const senhaForte = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{10,}$/.test(senha);
-  const forca = senha.length === 0 ? 0 : senhaForte ? 3 : senha.length >= 8 ? 2 : 1;
-  const forcaLabel = ['', 'Fraca', 'Media', 'Forte'];
+  const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+  const senhaValida = senhaRegex.test(senha);
+  const requisitosSenha = [
+    senha.length >= 8,
+    /[a-z]/.test(senha),
+    /[A-Z]/.test(senha),
+    /\d/.test(senha),
+    /[^A-Za-z0-9]/.test(senha),
+  ];
+  const forca = senha.length === 0 ? 0 : requisitosSenha.every(Boolean) ? 3 : requisitosSenha.filter(Boolean).length >= 3 ? 2 : 1;
+  const forcaLabel = ['', 'Fraca', 'Em progresso', 'Forte'];
   const forcaCor = ['', '#EF4444', '#F59E0B', '#10B981'];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nome || !email || !senha) { setErro('Preencha todos os campos.'); return; }
     if (senha !== confirmar) { setErro('As senhas nao coincidem.'); return; }
-    if (!senhaForte) {
-      setErro('Use no mínimo 10 caracteres, com letra maiúscula, minúscula, número e caractere especial.');
+    if (!senhaRegex.test(senha)) {
+      setErro('A senha deve ter no mínimo 8 caracteres, letras maiúsculas e minúsculas, número e caractere especial.');
       return;
     }
     setCarregando(true);
@@ -82,7 +90,7 @@ export default function RegisterPage({ navigate }: Props) {
               <div className="input-wrap">
                 <input
                   type={mostrarSenha ? 'text' : 'password'}
-                  placeholder="Mín. 10 caracteres, maiúscula, número e símbolo"
+                  placeholder="Mínimo 8 caracteres, letras, número e símbolo"
                   value={senha}
                   onChange={e => setSenha(e.target.value)}
                   autoComplete="new-password"
@@ -91,8 +99,8 @@ export default function RegisterPage({ navigate }: Props) {
                   {mostrarSenha ? '🔒' : '🔓'}
                 </button>
               </div>
-              <p className="form-hint">A senha precisa ter pelo menos 10 caracteres, uma letra maiúscula, uma minúscula, um número e um símbolo.</p>
               {senha && (
+                <>
                 <div className="password-strength">
                   <div className="password-strength__bar">
                     {[1, 2, 3].map(i => (
@@ -102,6 +110,11 @@ export default function RegisterPage({ navigate }: Props) {
                   </div>
                   <span style={{ color: forcaCor[forca] }}>{forcaLabel[forca]}</span>
                 </div>
+                <small className="form-hint">
+                  Use 8+ caracteres, uma letra maiúscula, uma minúscula, um número e um símbolo.
+                  {senhaValida ? ' Senha atende aos requisitos.' : ' Senha ainda não atende aos requisitos.'}
+                </small>
+                </>
               )}
             </div>
             <div className="form-group">
