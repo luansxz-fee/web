@@ -3,7 +3,9 @@ import { Page } from '../components/AppRouter';
 import { useTheme } from '../context/ThemeContext';
 import Logo from '../components/Logo';
 
-interface Props { navigate: (p: Page) => void; }
+interface Props {
+  navigate: (p: Page) => void;
+}
 
 export default function LandingPage({ navigate }: Props) {
   const { theme, toggleTheme } = useTheme();
@@ -15,19 +17,27 @@ export default function LandingPage({ navigate }: Props) {
         <div className="landing-nav__links">
           <a href="#features">Recursos</a>
           <a href="#how">Como funciona</a>
-          <button className="btn btn--ghost" onClick={toggleTheme}>{theme === 'light' ? '🌙' : '☀️'}</button>
-          <button className="btn btn--outline" onClick={() => navigate('login')}>Entrar</button>
-          <button className="btn btn--primary" onClick={() => navigate('register')}>Começar grátis</button>
+          <button className="btn btn--ghost" onClick={toggleTheme}>
+            {theme === 'light' ? '🌙' : '☀️'}
+          </button>
+          <button className="btn btn--outline" onClick={() => navigate('login')}>
+            Entrar
+          </button>
+          <button className="btn btn--primary" onClick={() => navigate('register')}>
+            Começar grátis
+          </button>
         </div>
-        <button className="landing-nav__mobile-menu" onClick={() => navigate('login')}>Entrar</button>
+        <button className="landing-nav__mobile-menu" onClick={() => navigate('login')}>
+          Entrar
+        </button>
       </nav>
 
       <section className="landing-hero">
         <div className="landing-hero__content">
           <div className="landing-hero__badge">🏥 Saúde digital simplificada</div>
           <h1 className="landing-hero__title">
-            Controle seus<br/>
-            <span className="gradient-text">medicamentos</span><br/>
+            Controle seus<br />
+            <span className="gradient-text">medicamentos</span><br />
             com facilidade
           </h1>
           <p className="landing-hero__subtitle">
@@ -49,6 +59,7 @@ export default function LandingPage({ navigate }: Props) {
             <div className="stat"><strong>4.9★</strong><span>avaliação</span></div>
           </div>
         </div>
+
         <div className="landing-hero__visual">
           <div className="phone-mockup">
             <div className="phone-mockup__screen">
@@ -91,7 +102,7 @@ export default function LandingPage({ navigate }: Props) {
 
       <section id="features" className="landing-section">
         <div className="section-label">Recursos</div>
-        <h2 className="section-title">Tudo que você precisa para<br/>cuidar da sua saúde</h2>
+        <h2 className="section-title">Tudo que você precisa para<br />cuidar da sua saúde</h2>
         <div className="features-grid">
           {[
             { icon: '🔔', title: 'Lembretes inteligentes', desc: 'Notificações personalizadas para nunca mais esquecer uma dose. Configure horários, dias e frequências.' },

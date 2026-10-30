@@ -40,6 +40,11 @@ const validacoesMedicamento = [
     .isDate()
     .withMessage('Data de inicio invalida'),
 
+  body('dataTermino')
+    .optional({ nullable: true, checkFalsy: true })
+    .isDate()
+    .withMessage('Data de termino invalida'),
+
   body('cor')
     .optional()
     .matches(/^#[0-9A-Fa-f]{6}$/)
@@ -55,6 +60,16 @@ const validacoesMedicamento = [
     .isInt({ min: 1 })
     .withMessage('Capacidade invalida'),
 
+  body('medicoPrescritor')
+    .optional({ nullable: true })
+    .isString()
+    .withMessage('Nome do medico invalido'),
+
+  body('crm')
+    .optional({ nullable: true })
+    .isString()
+    .withMessage('CRM invalido'),
+
   body('urlImagem')
     .optional({ nullable: true })
     .custom((val) => {
@@ -67,16 +82,9 @@ const validacoesMedicamento = [
         throw new Error('URL da imagem invalida');
       }
     }),
-
-  body('crmMedico')
-    .optional({ nullable: true })
-    .trim()
-    .isLength({ max: 30 })
-    .withMessage('CRM do medico deve ter no maximo 30 caracteres'),
 ];
 
 router.get('/', ctrl.listar);
-
 router.get('/:id', ctrl.buscar);
 
 router.post(
@@ -93,14 +101,8 @@ router.put(
   ctrl.atualizar
 );
 
-router.patch(
-  '/:id/alternar',
-  ctrl.alternarAtivo
-);
+router.patch('/:id/alternar', ctrl.alternarAtivo);
 
-router.delete(
-  '/:id',
-  ctrl.excluir
-);
+router.delete('/:id', ctrl.excluir);
 
 module.exports = router;

@@ -16,8 +16,11 @@ export default function MedicationsPage() {
   const [detailMed, setDetailMed] = useState<Medication | null>(null);
 
   const filtered = medications.filter(m => {
-    const matchSearch = m.name.toLowerCase().includes(search.toLowerCase()) ||
-      (m.prescribedBy || '').toLowerCase().includes(search.toLowerCase());
+    const termo = search.toLowerCase();
+    const matchSearch =
+      m.name.toLowerCase().includes(termo) ||
+      (m.prescribedBy || '').toLowerCase().includes(termo) ||
+      (m.crm || '').toLowerCase().includes(termo);
     const matchCat = category === 'Todos' || m.category === category;
     return matchSearch && matchCat;
   });
@@ -65,7 +68,7 @@ export default function MedicationsPage() {
       <div className="filters-bar">
         <div className="search-box">
           <span>🔍</span>
-          <input type="text" placeholder="Buscar por nome ou médico..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input type="text" placeholder="Buscar por nome, médico ou CRM..." value={search} onChange={e => setSearch(e.target.value)} />
           {search && <button onClick={() => setSearch('')}>✕</button>}
         </div>
         <div className="category-tabs">
@@ -125,6 +128,7 @@ export default function MedicationsPage() {
                   <h3 className="med-card__name">{med.name}</h3>
                   <p className="med-card__dosage">{med.dosage} {med.unit} · {med.frequency}</p>
                   {med.prescribedBy && <p className="med-card__doctor">👨‍⚕️ {med.prescribedBy}</p>}
+                  {med.crm && <p className="med-card__doctor">CRM: {med.crm}</p>}
 
                   <div className="med-card__times">
                     {med.times.map(t => (
@@ -175,6 +179,7 @@ export default function MedicationsPage() {
                   </div>
                   <span className="text-muted">{med.dosage} {med.unit} · {med.frequency} · {med.times.join(', ')}</span>
                   {med.prescribedBy && <span className="text-muted">👨‍⚕️ {med.prescribedBy}</span>}
+                  {med.crm && <span className="text-muted">CRM: {med.crm}</span>}
                 </div>
                 <div className="med-list-item__stock">
                   <span style={{ color: stockColor(pct), fontSize: 13, fontWeight: 700 }}>{med.stock} un.</span>
@@ -216,7 +221,7 @@ export default function MedicationsPage() {
                 <div className="detail-row"><span>Início</span><strong>{new Date(detailMed.startDate+'T12:00').toLocaleDateString('pt-BR')}</strong></div>
                 {detailMed.endDate && <div className="detail-row"><span>Término</span><strong>{new Date(detailMed.endDate+'T12:00').toLocaleDateString('pt-BR')}</strong></div>}
                 {detailMed.prescribedBy && <div className="detail-row"><span>Médico</span><strong>{detailMed.prescribedBy}</strong></div>}
-                {detailMed.crmMedico && <div className="detail-row"><span>CRM</span><strong>{detailMed.crmMedico}</strong></div>}
+                {detailMed.crm && <div className="detail-row"><span>CRM</span><strong>{detailMed.crm}</strong></div>}
                 <div className="detail-row"><span>Estoque</span><strong>{detailMed.stock} unidades</strong></div>
                 <div className="detail-row"><span>Lembretes</span><strong>{detailMed.reminderEnabled ? 'Ativados ✓' : 'Desativados'}</strong></div>
                 <div className="detail-row"><span>Status</span><strong>{detailMed.active ? '✅ Ativo' : '⏸️ Inativo'}</strong></div>

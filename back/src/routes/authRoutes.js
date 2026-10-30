@@ -4,9 +4,18 @@ const ctrl = require('../controllers/AuthController.js');
 const autenticar = require('../middleware/auth.js');
 const validar = require('../middleware/validate.js');
 
-
-const senhaForteRegex =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+const validarSenhaForte = (campo) =>
+  body(campo)
+    .isLength({ min: 8 })
+    .withMessage('A senha deve ter ao menos 8 caracteres')
+    .matches(/[a-z]/)
+    .withMessage('A senha deve conter uma letra minúscula')
+    .matches(/[A-Z]/)
+    .withMessage('A senha deve conter uma letra maiúscula')
+    .matches(/\d/)
+    .withMessage('A senha deve conter um número')
+    .matches(/[^A-Za-z0-9]/)
+    .withMessage('A senha deve conter um caractere especial');
 
 router.post(
   '/registrar',
@@ -14,21 +23,13 @@ router.post(
     body('nome')
       .trim()
       .notEmpty()
-      .withMessage('Nome e obrigatorio')
+      .withMessage('Nome é obrigatório')
       .isLength({ min: 2, max: 100 }),
-
     body('email')
       .isEmail()
-      .withMessage('E-mail invalido')
+      .withMessage('E-mail inválido')
       .normalizeEmail(),
-
-    body('senha')
-      .matches(senhaForteRegex)
-      .withMessage(
-        'A senha deve possuir no minimo 8 caracteres, ' +
-        'letras maiusculas e minusculas, numeros ' +
-        'e pelo menos um caractere especial.'
-      ),
+    validarSenhaForte('senha'),
   ],
   validar,
   ctrl.registrar
@@ -39,12 +40,11 @@ router.post(
   [
     body('email')
       .isEmail()
-      .withMessage('E-mail invalido')
+      .withMessage('E-mail inválido')
       .normalizeEmail(),
-
     body('senha')
       .notEmpty()
-      .withMessage('Senha e obrigatoria'),
+      .withMessage('Senha é obrigatória'),
   ],
   validar,
   ctrl.login
@@ -55,7 +55,7 @@ router.post(
   [
     body('email')
       .isEmail()
-      .withMessage('E-mail invalido')
+      .withMessage('E-mail inválido')
       .normalizeEmail(),
   ],
   validar,
@@ -65,27 +65,14 @@ router.post(
 router.post(
   '/redefinir-senha',
   [
-    body('token')
-      .notEmpty()
-      .withMessage('Token e obrigatorio'),
-
-    body('novaSenha')
-      .matches(senhaForteRegex)
-      .withMessage(
-        'A nova senha deve possuir no minimo 8 caracteres, ' +
-        'letras maiusculas e minusculas, numeros ' +
-        'e pelo menos um caractere especial.'
-      ),
+    body('token').notEmpty().withMessage('Token é obrigatório'),
+    validarSenhaForte('novaSenha'),
   ],
   validar,
   ctrl.redefinirSenha
 );
 
-router.get(
-  '/eu',
-  autenticar,
-  ctrl.meusDados
-);
+router.get('/eu', autenticar, ctrl.meusDados);
 
 router.put(
   '/eu',

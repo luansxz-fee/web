@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   _id?: string;
@@ -25,7 +24,7 @@ export interface Medication {
   icon?: string;
   imageUrl?: string;
   prescribedBy?: string;
-  crmMedico?: string;
+  crm?: string;
   startDate?: string;
   endDate?: string;
   reminderEnabled?: boolean;

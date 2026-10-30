@@ -15,59 +15,37 @@ import { api } from '../services/api';
 
 export interface MedContextData {
   medications: Medication[];
-
   logs: DoseLog[];
-
   adherence: {
     dias7: number;
     dias30: number;
   };
-
   addMedication: (
     data: Omit<Medication, 'id'> & {
       id?: string;
       _id?: string;
     }
   ) => Promise<void>;
-
   updateMedication: (
     id: string,
     data: Partial<Medication>
   ) => Promise<void>;
-
-  toggleMedication: (
-    id: string
-  ) => Promise<void>;
-
-  deleteMedication: (
-    id: string
-  ) => Promise<void>;
-
+  toggleMedication: (id: string) => Promise<void>;
+  deleteMedication: (id: string) => Promise<void>;
   logDose: (
     medicationId: string,
     time: string,
     status: string,
     notes?: string
   ) => Promise<void>;
-
-  getTodayMedications:
-    () => TodayMedicationItem[];
-
-  getUpcomingDoses:
-    () => {
-      medication: Medication;
-      time: string;
-    }[];
-
-  getAdherenceRate: (
-    days: number
-  ) => number;
-
-  fetchMedications:
-    () => Promise<void>;
-
-  fetchAdherence:
-    () => Promise<void>;
+  getTodayMedications: () => TodayMedicationItem[];
+  getUpcomingDoses: () => {
+    medication: Medication;
+    time: string;
+  }[];
+  getAdherenceRate: (days: number) => number;
+  fetchMedications: () => Promise<void>;
+  fetchAdherence: () => Promise<void>;
 }
 
 export const MedContext =
@@ -84,27 +62,16 @@ export const MedContext =
 function obterUsuarioId(): string | null {
   try {
     const usuarioSalvo =
-      localStorage.getItem(
-        'medsync_usuario'
-      );
+      localStorage.getItem('medsync_usuario');
 
     if (usuarioSalvo) {
-      const usuario =
-        JSON.parse(usuarioSalvo);
+      const usuario = JSON.parse(usuarioSalvo);
 
       if (usuario?.id) {
         return String(usuario.id);
       }
     }
 
-    /*
-     * Fallback:
-     * se não houver usuário salvo,
-     * consulta o backend.
-     *
-     * O ID também pode ser obtido do JWT,
-     * mas não precisamos fazer isso aqui.
-     */
     return null;
   } catch {
     return null;
@@ -114,8 +81,7 @@ function obterUsuarioId(): string | null {
 function getStorageKey(
   tipo: 'meds' | 'logs'
 ): string | null {
-  const usuarioId =
-    obterUsuarioId();
+  const usuarioId = obterUsuarioId();
 
   if (!usuarioId) {
     return null;
@@ -125,22 +91,15 @@ function getStorageKey(
 }
 
 function limparCacheDoUsuarioAtual() {
-  const medsKey =
-    getStorageKey('meds');
-
-  const logsKey =
-    getStorageKey('logs');
+  const medsKey = getStorageKey('meds');
+  const logsKey = getStorageKey('logs');
 
   if (medsKey) {
-    localStorage.removeItem(
-      medsKey
-    );
+    localStorage.removeItem(medsKey);
   }
 
   if (logsKey) {
-    localStorage.removeItem(
-      logsKey
-    );
+    localStorage.removeItem(logsKey);
   }
 }
 
@@ -152,30 +111,19 @@ function limparCacheDoUsuarioAtual() {
 
 const getTodayString = () => {
   const d = new Date();
-
-  const year =
-    d.getFullYear();
-
-  const month = String(
-    d.getMonth() + 1
-  ).padStart(2, '0');
-
-  const day = String(
-    d.getDate()
-  ).padStart(2, '0');
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
 };
 
-const normalizeDate = (
-  d?: any
-): string => {
+const normalizeDate = (d?: any): string => {
   if (!d) {
     return getTodayString();
   }
 
-  const str =
-    String(d).trim();
+  const str = String(d).trim();
 
   if (str.includes('T')) {
     return str.split('T')[0];
@@ -184,73 +132,35 @@ const normalizeDate = (
   return str.slice(0, 10);
 };
 
-const isMedicationScheduledOnDate = (
-  medication: Medication,
-  date: string
-): boolean => {
-  const startDate = medication.startDate
-    ? normalizeDate(medication.startDate)
-    : '';
-  const endDate = medication.endDate
-    ? normalizeDate(medication.endDate)
-    : '';
-
-  // Não cria doses antes do primeiro dia do tratamento.
-  if (startDate && date < startDate) return false;
-
-  // Não cria doses após o último dia do tratamento.
-  if (endDate && date > endDate) return false;
-
-  return true;
-};
-
-const normalizeTime = (
-  t?: any
-): string => {
+const normalizeTime = (t?: any): string => {
   if (!t) {
     return '';
   }
 
-  return String(t)
-    .trim()
-    .slice(0, 5);
+  return String(t).trim().slice(0, 5);
 };
 
-const isTimePassed = (
-  timeStr: string
-) => {
-  const normalized =
-    normalizeTime(timeStr);
+const isTimePassed = (timeStr: string) => {
+  const normalized = normalizeTime(timeStr);
 
   if (!normalized) {
     return false;
   }
 
-  const [h, m] =
-    normalized
-      .split(':')
-      .map(Number);
+  const [h, m] = normalized.split(':').map(Number);
 
-  if (
-    Number.isNaN(h) ||
-    Number.isNaN(m)
-  ) {
+  if (Number.isNaN(h) || Number.isNaN(m)) {
     return false;
   }
 
   const now = new Date();
 
   const currentMinutes =
-    now.getHours() * 60 +
-    now.getMinutes();
+    now.getHours() * 60 + now.getMinutes();
 
-  const scheduledMinutes =
-    h * 60 + m;
+  const scheduledMinutes = h * 60 + m;
 
-  return (
-    currentMinutes >
-    scheduledMinutes
-  );
+  return currentMinutes > scheduledMinutes;
 };
 
 /*
@@ -280,49 +190,29 @@ export const MedProvider: React.FC<{
   /*
    * Carrega o cache SOMENTE do usuário atual.
    */
-  const carregarCache =
-    useCallback(() => {
-      const medsKey =
-        getStorageKey('meds');
+  const carregarCache = useCallback(() => {
+    const medsKey = getStorageKey('meds');
+    const logsKey = getStorageKey('logs');
 
-      const logsKey =
-        getStorageKey('logs');
-
-      try {
-        if (medsKey) {
-          const saved =
-            localStorage.getItem(
-              medsKey
-            );
-
-          setMedications(
-            saved
-              ? JSON.parse(saved)
-              : []
-          );
-        } else {
-          setMedications([]);
-        }
-
-        if (logsKey) {
-          const saved =
-            localStorage.getItem(
-              logsKey
-            );
-
-          setLogs(
-            saved
-              ? JSON.parse(saved)
-              : []
-          );
-        } else {
-          setLogs([]);
-        }
-      } catch {
+    try {
+      if (medsKey) {
+        const saved = localStorage.getItem(medsKey);
+        setMedications(saved ? JSON.parse(saved) : []);
+      } else {
         setMedications([]);
+      }
+
+      if (logsKey) {
+        const saved = localStorage.getItem(logsKey);
+        setLogs(saved ? JSON.parse(saved) : []);
+      } else {
         setLogs([]);
       }
-    }, []);
+    } catch {
+      setMedications([]);
+      setLogs([]);
+    }
+  }, []);
 
   /*
    * =======================================================
@@ -330,44 +220,21 @@ export const MedProvider: React.FC<{
    * =======================================================
    */
 
-  const formatMed = (
-    item: any
-  ): Medication => {
+  const formatMed = (item: any): Medication => {
     const realId = String(
-      item.id ||
-        item._id ||
-        ''
+      item.id || item._id || ''
     ).trim();
 
     return {
       id: realId,
-
       _id: realId,
 
-      name:
-        item.nome ||
-        item.name ||
-        '',
+      name: item.nome || item.name || '',
+      dosage: item.dosagem || item.dosage || '',
+      unit: item.unidade || item.unit || 'mg',
+      frequency: item.frequencia || item.frequency || 'Diário',
 
-      dosage:
-        item.dosagem ||
-        item.dosage ||
-        '',
-
-      unit:
-        item.unidade ||
-        item.unit ||
-        'mg',
-
-      frequency:
-        item.frequencia ||
-        item.frequency ||
-        'Diário',
-
-      times:
-        item.horarios ||
-        item.times ||
-        [],
+      times: item.horarios || item.times || [],
 
       stock: Number(
         item.estoqueAtual ??
@@ -382,25 +249,10 @@ export const MedProvider: React.FC<{
           30
       ),
 
-      active:
-        item.ativo ??
-        item.active ??
-        true,
-
-      color:
-        item.cor ||
-        item.color ||
-        '#3b82f6',
-
-      category:
-        item.categoria ||
-        item.category ||
-        'Geral',
-
-      icon:
-        item.icone ||
-        item.icon ||
-        'Pill',
+      active: item.ativo ?? item.active ?? true,
+      color: item.cor || item.color || '#3b82f6',
+      category: item.categoria || item.category || 'Geral',
+      icon: item.icone || item.icon || 'Pill',
 
       imageUrl:
         item.urlImagem ||
@@ -412,10 +264,10 @@ export const MedProvider: React.FC<{
         item.medico ||
         item.prescribedBy,
 
-      crmMedico:
+      crm:
+        item.crm ||
         item.crmMedico ||
-        item.crm_medico ||
-        '',
+        item.crm_medico,
 
       startDate:
         item.dataInicio ||
@@ -441,17 +293,12 @@ export const MedProvider: React.FC<{
     };
   };
 
-  const parseLog = (
-    l: any
-  ): DoseLog => {
-    const rawStatus =
-      String(
-        l.situacao ||
-          l.status ||
-          ''
-      )
-        .toUpperCase()
-        .trim();
+  const parseLog = (l: any): DoseLog => {
+    const rawStatus = String(
+      l.situacao || l.status || ''
+    )
+      .toUpperCase()
+      .trim();
 
     const isTaken = [
       'TOMADO',
@@ -488,8 +335,7 @@ export const MedProvider: React.FC<{
       l.medicamentoId ||
         l.medicationId ||
         (
-          typeof l.medicamento ===
-          'object'
+          typeof l.medicamento === 'object'
             ? l.medicamento?.id ||
               l.medicamento?._id
             : l.medicamento
@@ -499,73 +345,42 @@ export const MedProvider: React.FC<{
 
     return {
       id: String(
-        l.id ||
-          l._id ||
-          Date.now()
+        l.id || l._id || Date.now()
       ).trim(),
 
       _id: String(
-        l._id ||
-          l.id ||
-          Date.now()
+        l._id || l.id || Date.now()
       ).trim(),
 
-      medicationId:
-        medId,
+      medicationId: medId,
 
-      scheduledTime:
-        normalizeTime(
-          l.horarioAgendado ||
-            l.scheduledTime ||
-            l.horario
-        ),
+      scheduledTime: normalizeTime(
+        l.horarioAgendado ||
+          l.scheduledTime ||
+          l.horario
+      ),
 
-      status:
-        frontendStatus,
+      status: frontendStatus,
+      situacao: backendStatus,
 
-      situacao:
-        backendStatus,
+      date: normalizeDate(
+        l.data ||
+          l.date ||
+          l.criadoEm ||
+          l.createdAt
+      ),
 
-      date:
-        normalizeDate(
-          l.data ||
-            l.date ||
-            l.criadoEm ||
-            l.createdAt
-        ),
-
-      notes:
-        l.observacao ||
-        l.notes,
+      notes: l.observacao || l.notes,
     };
   };
 
-  const parseToApiPayload = (
-    med: any
-  ) => {
+  const parseToApiPayload = (med: any) => {
     return {
-      nome:
-        med.name ||
-        med.nome,
-
-      dosagem:
-        med.dosage ||
-        med.dosagem,
-
-      unidade:
-        med.unit ||
-        med.unidade ||
-        'mg',
-
-      frequencia:
-        med.frequency ||
-        med.frequencia ||
-        'Diário',
-
-      horarios:
-        med.times ||
-        med.horarios ||
-        [],
+      nome: med.name || med.nome,
+      dosagem: med.dosage || med.dosagem,
+      unidade: med.unit || med.unidade || 'mg',
+      frequencia: med.frequency || med.frequencia || 'Diário',
+      horarios: med.times || med.horarios || [],
 
       dataInicio:
         med.startDate ||
@@ -577,45 +392,29 @@ export const MedProvider: React.FC<{
         med.dataTermino ||
         null,
 
-      cor:
-        med.color ||
-        med.cor ||
-        '#3b82f6',
+      cor: med.color || med.cor || '#3b82f6',
+      icone: med.icon || med.icone || 'Pill',
+      categoria: med.category || med.categoria || 'Geral',
 
-      icone:
-        med.icon ||
-        med.icone ||
-        'Pill',
+      estoqueAtual: Number(
+        med.stock ??
+          med.estoqueAtual ??
+          med.estoque ??
+          0
+      ),
 
-      categoria:
-        med.category ||
-        med.categoria ||
-        'Geral',
-
-      estoqueAtual:
-        Number(
-          med.stock ??
-            med.estoqueAtual ??
-            med.estoque ??
-            0
-        ),
-
-      estoqueMaximo:
-        Number(
-          med.stockMax ??
-            med.estoqueMaximo ??
-            30
-        ),
+      estoqueMaximo: Number(
+        med.stockMax ??
+          med.estoqueMaximo ??
+          30
+      ),
 
       lembreteAtivo:
         med.reminderEnabled ??
         med.lembreteAtivo ??
         true,
 
-      ativo:
-        med.active ??
-        med.ativo ??
-        true,
+      ativo: med.active ?? med.ativo ?? true,
 
       urlImagem:
         med.imageUrl ||
@@ -628,7 +427,8 @@ export const MedProvider: React.FC<{
         med.medico ||
         null,
 
-      crmMedico:
+      crm:
+        med.crm ||
         med.crmMedico ||
         med.crm_medico ||
         null,
@@ -644,8 +444,7 @@ export const MedProvider: React.FC<{
         null,
     };
   };
-
-  /*
+    /*
    * =======================================================
    * ADESÃO
    * =======================================================
@@ -685,10 +484,6 @@ export const MedProvider: React.FC<{
   const fetchMedications =
     useCallback(async () => {
       try {
-        /*
-         * Se não existe usuário logado,
-         * não carregamos absolutamente nada.
-         */
         const usuarioId =
           obterUsuarioId();
 
@@ -703,45 +498,29 @@ export const MedProvider: React.FC<{
           logsRes,
         ] =
           await Promise.all([
-            api.medicamentos
-              .listar(),
+            api.medicamentos.listar(),
 
             api.registros
               .listar()
               .catch(() => null),
           ]);
 
-        /*
-         * IMPORTANTE:
-         * Mesmo que a API retorne [],
-         * substituímos o estado.
-         */
         if (
           medsRes?.dados &&
-          Array.isArray(
-            medsRes.dados
-          )
+          Array.isArray(medsRes.dados)
         ) {
           const formatados =
-            medsRes.dados.map(
-              formatMed
-            );
+            medsRes.dados.map(formatMed);
 
-          setMedications(
-            formatados
-          );
+          setMedications(formatados);
 
           const key =
-            getStorageKey(
-              'meds'
-            );
+            getStorageKey('meds');
 
           if (key) {
             localStorage.setItem(
               key,
-              JSON.stringify(
-                formatados
-              )
+              JSON.stringify(formatados)
             );
           }
         } else {
@@ -750,30 +529,20 @@ export const MedProvider: React.FC<{
 
         if (
           logsRes?.dados &&
-          Array.isArray(
-            logsRes.dados
-          )
+          Array.isArray(logsRes.dados)
         ) {
           const logsFormatados =
-            logsRes.dados.map(
-              parseLog
-            );
+            logsRes.dados.map(parseLog);
 
-          setLogs(
-            logsFormatados
-          );
+          setLogs(logsFormatados);
 
           const key =
-            getStorageKey(
-              'logs'
-            );
+            getStorageKey('logs');
 
           if (key) {
             localStorage.setItem(
               key,
-              JSON.stringify(
-                logsFormatados
-              )
+              JSON.stringify(logsFormatados)
             );
           }
         } else {
@@ -787,9 +556,7 @@ export const MedProvider: React.FC<{
           error
         );
       }
-    }, [
-      fetchAdherence,
-    ]);
+    }, [fetchAdherence]);
 
   /*
    * Quando o provider monta:
@@ -803,7 +570,6 @@ export const MedProvider: React.FC<{
     setLogs([]);
 
     carregarCache();
-
     fetchMedications();
   }, [
     carregarCache,
@@ -818,10 +584,7 @@ export const MedProvider: React.FC<{
 
   const addMedication =
     async (
-      medData: Omit<
-        Medication,
-        'id'
-      > & {
+      medData: Omit<Medication, 'id'> & {
         id?: string;
         _id?: string;
       }
@@ -836,53 +599,34 @@ export const MedProvider: React.FC<{
       }
 
       const payload =
-        parseToApiPayload(
-          medData
-        );
+        parseToApiPayload(medData);
 
       try {
-        /*
-         * NÃO enviamos usuarioId.
-         *
-         * O backend descobre o usuário
-         * pelo JWT.
-         */
         const res =
-          await api.medicamentos.criar(
-            payload
-          );
+          await api.medicamentos.criar(payload);
 
         if (res?.dados) {
           const novoMed =
-            formatMed(
-              res.dados
-            );
+            formatMed(res.dados);
 
-          setMedications(
-            prev => {
-              const novoEstado =
-                [
-                  ...prev,
-                  novoMed,
-                ];
+          setMedications(prev => {
+            const novoEstado = [
+              ...prev,
+              novoMed,
+            ];
 
-              const key =
-                getStorageKey(
-                  'meds'
-                );
+            const key =
+              getStorageKey('meds');
 
-              if (key) {
-                localStorage.setItem(
-                  key,
-                  JSON.stringify(
-                    novoEstado
-                  )
-                );
-              }
-
-              return novoEstado;
+            if (key) {
+              localStorage.setItem(
+                key,
+                JSON.stringify(novoEstado)
+              );
             }
-          );
+
+            return novoEstado;
+          });
         }
       } catch (error) {
         console.error(
@@ -910,11 +654,6 @@ export const MedProvider: React.FC<{
       }
 
       try {
-        /*
-         * PUT /medicamentos/:id exige todos os campos obrigatórios.
-         * Portanto, quando a tela envia apenas { active: false },
-         * mesclamos os dados atuais antes de montar o payload.
-         */
         const atual = medications.find(
           m =>
             String(m.id) === String(id) ||
@@ -931,40 +670,35 @@ export const MedProvider: React.FC<{
         const res =
           await api.medicamentos.atualizar(
             String(id),
-            parseToApiPayload(
-              dadosCompletos
-            )
+            parseToApiPayload(dadosCompletos)
           );
 
         const medAtualizado =
           formatMed(
-            res?.dados ||
-              dadosCompletos
+            res?.dados || dadosCompletos
           );
 
-        setMedications(
-          prev => {
-            const novoEstado =
-              prev.map(m =>
-                String(m.id) === String(id) ||
-                String(m._id) === String(id)
-                  ? medAtualizado
-                  : m
-              );
+        setMedications(prev => {
+          const novoEstado =
+            prev.map(m =>
+              String(m.id) === String(id) ||
+              String(m._id) === String(id)
+                ? medAtualizado
+                : m
+            );
 
-            const key =
-              getStorageKey('meds');
+          const key =
+            getStorageKey('meds');
 
-            if (key) {
-              localStorage.setItem(
-                key,
-                JSON.stringify(novoEstado)
-              );
-            }
-
-            return novoEstado;
+          if (key) {
+            localStorage.setItem(
+              key,
+              JSON.stringify(novoEstado)
+            );
           }
-        );
+
+          return novoEstado;
+        });
       } catch (error) {
         console.error(
           'Erro ao atualizar medicamento:',
@@ -995,9 +729,8 @@ export const MedProvider: React.FC<{
         return;
       }
 
-      const novoAtivo = !Boolean(
-        atual.active
-      );
+      const novoAtivo =
+        !Boolean(atual.active);
 
       try {
         const res =
@@ -1013,29 +746,27 @@ export const MedProvider: React.FC<{
                 active: novoAtivo,
               };
 
-        setMedications(
-          prev => {
-            const novoEstado =
-              prev.map(m =>
-                String(m.id) === String(id) ||
-                String(m._id) === String(id)
-                  ? medAtualizado
-                  : m
-              );
+        setMedications(prev => {
+          const novoEstado =
+            prev.map(m =>
+              String(m.id) === String(id) ||
+              String(m._id) === String(id)
+                ? medAtualizado
+                : m
+            );
 
-            const key =
-              getStorageKey('meds');
+          const key =
+            getStorageKey('meds');
 
-            if (key) {
-              localStorage.setItem(
-                key,
-                JSON.stringify(novoEstado)
-              );
-            }
-
-            return novoEstado;
+          if (key) {
+            localStorage.setItem(
+              key,
+              JSON.stringify(novoEstado)
+            );
           }
-        );
+
+          return novoEstado;
+        });
       } catch (error) {
         console.error(
           'Erro ao alternar status do medicamento:',
@@ -1053,9 +784,7 @@ export const MedProvider: React.FC<{
    */
 
   const deleteMedication =
-    async (
-      id: string
-    ) => {
+    async (id: string) => {
       if (!id) {
         return;
       }
@@ -1065,34 +794,26 @@ export const MedProvider: React.FC<{
           String(id)
         );
 
-        setMedications(
-          prev => {
-            const novoEstado =
-              prev.filter(
-                m =>
-                  String(m.id) !==
-                    String(id) &&
-                  String(m._id) !==
-                    String(id)
-              );
+        setMedications(prev => {
+          const novoEstado =
+            prev.filter(
+              m =>
+                String(m.id) !== String(id) &&
+                String(m._id) !== String(id)
+            );
 
-            const key =
-              getStorageKey(
-                'meds'
-              );
+          const key =
+            getStorageKey('meds');
 
-            if (key) {
-              localStorage.setItem(
-                key,
-                JSON.stringify(
-                  novoEstado
-                )
-              );
-            }
-
-            return novoEstado;
+          if (key) {
+            localStorage.setItem(
+              key,
+              JSON.stringify(novoEstado)
+            );
           }
-        );
+
+          return novoEstado;
+        });
       } catch (error) {
         console.error(
           'Erro ao excluir medicamento:',
@@ -1123,9 +844,7 @@ export const MedProvider: React.FC<{
         normalizeTime(time);
 
       const cleanMedId =
-        String(
-          medicationId
-        ).trim();
+        String(medicationId).trim();
 
       const rawStatus =
         String(status)
@@ -1138,17 +857,13 @@ export const MedProvider: React.FC<{
         'concluido',
         'ok',
         'true',
-      ].includes(
-        rawStatus
-      );
+      ].includes(rawStatus);
 
       const isMissed = [
         'missed',
         'perdido',
         'atrasado',
-      ].includes(
-        rawStatus
-      );
+      ].includes(rawStatus);
 
       const frontendStatus:
         | 'taken'
@@ -1170,164 +885,101 @@ export const MedProvider: React.FC<{
       const existingLog =
         logs.find(
           l =>
-            String(
-              l.medicationId
-            ).trim() ===
+            String(l.medicationId).trim() ===
               cleanMedId &&
-            normalizeTime(
-              l.scheduledTime
-            ) === cleanTime &&
-            normalizeDate(
-              l.date
-            ) === todayStr
+            normalizeTime(l.scheduledTime) ===
+              cleanTime &&
+            normalizeDate(l.date) === todayStr
         );
 
       const wasTakenBefore =
-        existingLog?.status ===
-          'taken' ||
-        existingLog?.situacao ===
-          'TOMADO';
+        existingLog?.status === 'taken' ||
+        existingLog?.situacao === 'TOMADO';
 
       const newLog: DoseLog = {
-        id: String(
-          Date.now()
-        ),
-
-        _id: String(
-          Date.now()
-        ),
-
-        medicationId:
-          cleanMedId,
-
-        scheduledTime:
-          cleanTime,
-
-        status:
-          frontendStatus,
-
-        situacao:
-          backendStatus,
-
-        date:
-          todayStr,
-
+        id: String(Date.now()),
+        _id: String(Date.now()),
+        medicationId: cleanMedId,
+        scheduledTime: cleanTime,
+        status: frontendStatus,
+        situacao: backendStatus,
+        date: todayStr,
         notes,
       };
 
-      setLogs(
-        prev => {
-          const novoEstado = [
-            newLog,
-            ...prev.filter(
-              l =>
-                !(
-                  String(
-                    l.medicationId
-                  ).trim() ===
-                    cleanMedId &&
-                  normalizeTime(
-                    l.scheduledTime
-                  ) === cleanTime &&
-                  normalizeDate(
-                    l.date
-                  ) === todayStr
-                )
-            ),
-          ];
+      setLogs(prev => {
+        const novoEstado = [
+          newLog,
+          ...prev.filter(
+            l =>
+              !(
+                String(l.medicationId).trim() ===
+                  cleanMedId &&
+                normalizeTime(l.scheduledTime) ===
+                  cleanTime &&
+                normalizeDate(l.date) === todayStr
+              )
+          ),
+        ];
+
+        const key =
+          getStorageKey('logs');
+
+        if (key) {
+          localStorage.setItem(
+            key,
+            JSON.stringify(novoEstado)
+          );
+        }
+
+        return novoEstado;
+      });
+
+      if (isTaken && !wasTakenBefore) {
+        setMedications(prev => {
+          const novoEstado =
+            prev.map(m => {
+              if (
+                String(m.id).trim() === cleanMedId ||
+                String(m._id).trim() === cleanMedId
+              ) {
+                const newStock =
+                  Math.max(
+                    0,
+                    (m.stock ?? 1) - 1
+                  );
+
+                api.medicamentos
+                  .atualizar(
+                    String(cleanMedId),
+                    parseToApiPayload({
+                      ...m,
+                      stock: newStock,
+                    })
+                  )
+                  .catch(console.error);
+
+                return {
+                  ...m,
+                  stock: newStock,
+                };
+              }
+
+              return m;
+            });
 
           const key =
-            getStorageKey(
-              'logs'
-            );
+            getStorageKey('meds');
 
           if (key) {
             localStorage.setItem(
               key,
-              JSON.stringify(
-                novoEstado
-              )
+              JSON.stringify(novoEstado)
             );
           }
 
           return novoEstado;
-        }
-      );
-
-      if (
-        isTaken &&
-        !wasTakenBefore
-      ) {
-        setMedications(
-          prev => {
-            const novoEstado =
-              prev.map(m => {
-                if (
-                  String(
-                    m.id
-                  ).trim() ===
-                    cleanMedId ||
-                  String(
-                    m._id
-                  ).trim() ===
-                    cleanMedId
-                ) {
-                  const newStock =
-                    Math.max(
-                      0,
-                      (m.stock ??
-                        1) - 1
-                    );
-
-                  /*
-                   * Atualiza no backend.
-                   * O backend ainda verifica o dono
-                   * do medicamento pelo JWT.
-                   */
-                  api.medicamentos
-                    .atualizar(
-                      String(
-                        cleanMedId
-                      ),
-                      parseToApiPayload(
-                        {
-                          ...m,
-                          stock:
-                            newStock,
-                        }
-                      )
-                    )
-                    .catch(
-                      console.error
-                    );
-
-                  return {
-                    ...m,
-                    stock:
-                      newStock,
-                  };
-                }
-
-                return m;
-              });
-
-            const key =
-              getStorageKey(
-                'meds'
-              );
-
-            if (key) {
-              localStorage.setItem(
-                key,
-                JSON.stringify(
-                  novoEstado
-                )
-              );
-            }
-
-            return novoEstado;
-          }
-        );
+        });
       }
 
       try {
@@ -1341,38 +993,29 @@ export const MedProvider: React.FC<{
 
         if (res?.dados) {
           const parsedServerLog =
-            parseLog(
-              res.dados
-            );
+            parseLog(res.dados);
 
-          setLogs(
-            prev => {
-              const novoEstado =
-                prev.map(
-                  l =>
-                    l.id ===
-                    newLog.id
-                      ? parsedServerLog
-                      : l
-                );
+          setLogs(prev => {
+            const novoEstado =
+              prev.map(
+                l =>
+                  l.id === newLog.id
+                    ? parsedServerLog
+                    : l
+              );
 
-              const key =
-                getStorageKey(
-                  'logs'
-                );
+            const key =
+              getStorageKey('logs');
 
-              if (key) {
-                localStorage.setItem(
-                  key,
-                  JSON.stringify(
-                    novoEstado
-                  )
-                );
-              }
-
-              return novoEstado;
+            if (key) {
+              localStorage.setItem(
+                key,
+                JSON.stringify(novoEstado)
+              );
             }
-          );
+
+            return novoEstado;
+          });
         }
 
         await fetchAdherence();
@@ -1391,69 +1034,63 @@ export const MedProvider: React.FC<{
    */
 
   useEffect(() => {
-    if (
-      medications.length === 0
-    ) {
+    if (medications.length === 0) {
       return;
     }
 
-    const checkMissedDoses =
-      () => {
-        const todayStr =
-          getTodayString();
+    const checkMissedDoses = () => {
+      const todayStr = getTodayString();
 
-        medications
-          .filter(
-            m => m.active &&
-              isMedicationScheduledOnDate(m, todayStr)
-          )
-          .forEach(med => {
-            (
-              med.times || []
-            ).forEach(time => {
-              const cleanTime =
-                normalizeTime(
-                  time
-                );
+      medications
+        .filter(m => {
+          if (!m.active) {
+            return false;
+          }
 
-              const medId =
-                String(
-                  med.id ||
-                    med._id
-                ).trim();
+          const startDate =
+            normalizeDate(m.startDate);
 
-              const hasLog =
-                logs.some(
-                  l =>
-                    String(
-                      l.medicationId
-                    ).trim() ===
-                      medId &&
-                    normalizeTime(
-                      l.scheduledTime
-                    ) ===
-                      cleanTime &&
-                    normalizeDate(
-                      l.date
-                    ) ===
-                      todayStr
-                );
+          const endDate =
+            m.endDate
+              ? normalizeDate(m.endDate)
+              : null;
 
-              if (
-                !hasLog &&
-                isTimePassed(
-                  cleanTime
-                )
-              ) {
-                logDose(
-                  medId,
-                  cleanTime,
-                  'missed'
-                );
-              }
-            });
+          return (
+            todayStr >= startDate &&
+            (!endDate || todayStr <= endDate)
+          );
+        })
+        .forEach(med => {
+          (med.times || []).forEach(time => {
+            const cleanTime =
+              normalizeTime(time);
+
+            const medId =
+              String(med.id || med._id).trim();
+
+            const hasLog =
+              logs.some(
+                l =>
+                  String(l.medicationId).trim() ===
+                    medId &&
+                  normalizeTime(l.scheduledTime) ===
+                    cleanTime &&
+                  normalizeDate(l.date) === todayStr
+              );
+
+            if (
+              !hasLog &&
+              isTimePassed(cleanTime)
+            ) {
+              logDose(
+                medId,
+                cleanTime,
+                'missed'
+              );
+            }
           });
-      };
+        });
+    };
 
     checkMissedDoses();
 
@@ -1464,9 +1101,7 @@ export const MedProvider: React.FC<{
       );
 
     return () =>
-      clearInterval(
-        interval
-      );
+      clearInterval(interval);
   }, [
     medications,
     logs,
@@ -1483,62 +1118,59 @@ export const MedProvider: React.FC<{
       const todayStr =
         getTodayString();
 
-      const items: TodayMedicationItem[] =
-        [];
+      const items: TodayMedicationItem[] = [];
 
       medications
-        .filter(
-          m => m.active &&
-            isMedicationScheduledOnDate(m, todayStr)
-        )
+        .filter(m => {
+          if (!m.active) {
+            return false;
+          }
+
+          const startDate =
+            normalizeDate(m.startDate);
+
+          const endDate =
+            m.endDate
+              ? normalizeDate(m.endDate)
+              : null;
+
+          return (
+            todayStr >= startDate &&
+            (!endDate || todayStr <= endDate)
+          );
+        })
         .forEach(med => {
-          (
-            med.times || []
-          ).forEach(time => {
+          (med.times || []).forEach(time => {
             const cleanTime =
-              normalizeTime(
-                time
-              );
+              normalizeTime(time);
 
             const medId =
-              String(
-                med.id ||
-                  med._id
-              ).trim();
+              String(med.id || med._id).trim();
 
             const log =
-              logs.find(
-                l => {
-                  const matchMed =
-                    String(
-                      l.medicationId
-                    ).trim() ===
-                    medId;
+              logs.find(l => {
+                const matchMed =
+                  String(l.medicationId).trim() ===
+                  medId;
 
-                  const matchTime =
-                    normalizeTime(
-                      l.scheduledTime
-                    ) ===
-                    cleanTime;
+                const matchTime =
+                  normalizeTime(l.scheduledTime) ===
+                  cleanTime;
 
-                  const matchDate =
-                    normalizeDate(
-                      l.date
-                    ) ===
-                    todayStr;
+                const matchDate =
+                  normalizeDate(l.date) ===
+                  todayStr;
 
-                  return (
-                    matchMed &&
-                    matchTime &&
-                    matchDate
-                  );
-                }
-              );
+                return (
+                  matchMed &&
+                  matchTime &&
+                  matchDate
+                );
+              });
 
             items.push({
               medication: med,
-              scheduledTime:
-                cleanTime,
+              scheduledTime: cleanTime,
               log,
             });
           });
@@ -1559,51 +1191,33 @@ export const MedProvider: React.FC<{
         .filter(
           item =>
             !item.log &&
-            !isTimePassed(
-              item.scheduledTime
-            )
+            !isTimePassed(item.scheduledTime)
         )
-        .map(
-          item => ({
-            medication:
-              item.medication,
-            time:
-              item.scheduledTime,
-          })
-        );
+        .map(item => ({
+          medication: item.medication,
+          time: item.scheduledTime,
+        }));
     };
 
   const getAdherenceRate = (
     days: number
   ): number => {
-    if (
-      logs.length === 0
-    ) {
+    if (logs.length === 0) {
       return 100;
     }
 
-    const today =
-      new Date();
-
-    const limitDate =
-      new Date();
+    const today = new Date();
+    const limitDate = new Date();
 
     limitDate.setDate(
-      today.getDate() -
-        days
+      today.getDate() - days
     );
 
     const recentLogs =
       logs.filter(l => {
-        const logDate =
-          new Date(
-            l.date
-          );
+        const logDate = new Date(l.date);
 
-        return (
-          logDate >=
-          limitDate
-        );
+        return logDate >= limitDate;
       });
 
     const targetLogs =
@@ -1614,16 +1228,12 @@ export const MedProvider: React.FC<{
     const tomadas =
       targetLogs.filter(
         l =>
-          l.status ===
-            'taken' ||
-          l.situacao ===
-            'TOMADO'
+          l.status === 'taken' ||
+          l.situacao === 'TOMADO'
       ).length;
 
     return Math.round(
-      (tomadas /
-        targetLogs.length) *
-        100
+      (tomadas / targetLogs.length) * 100
     );
   };
 
@@ -1633,25 +1243,15 @@ export const MedProvider: React.FC<{
         medications,
         logs,
         adherence,
-
         addMedication,
-
         updateMedication,
-
         toggleMedication,
-
         deleteMedication,
-
         logDose,
-
         getTodayMedications,
-
         getUpcomingDoses,
-
         getAdherenceRate,
-
         fetchMedications,
-
         fetchAdherence,
       }}
     >

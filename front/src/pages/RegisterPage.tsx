@@ -4,11 +4,17 @@ import { Page } from '../components/AppRouter';
 import Logo from '../components/Logo';
 import { useTheme } from '../context/ThemeContext';
 
-interface Props { navigate: (p: Page) => void; }
+interface Props {
+  navigate: (p: Page) => void;
+}
+
+const senhaValida = (senha: string) =>
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(senha);
 
 export default function RegisterPage({ navigate }: Props) {
   const { registrar } = useAuth();
   const { theme, toggleTheme } = useTheme();
+
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -17,34 +23,46 @@ export default function RegisterPage({ navigate }: Props) {
   const [carregando, setCarregando] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  const senhaRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-  const senhaValida = senhaRegex.test(senha);
-  const requisitosSenha = [
-    senha.length >= 8,
-    /[a-z]/.test(senha),
-    /[A-Z]/.test(senha),
-    /\d/.test(senha),
-    /[^A-Za-z0-9]/.test(senha),
+  const requisitos = [
+    { texto: 'Pelo menos 8 caracteres', ok: senha.length >= 8 },
+    { texto: 'Uma letra maiúscula', ok: /[A-Z]/.test(senha) },
+    { texto: 'Uma letra minúscula', ok: /[a-z]/.test(senha) },
+    { texto: 'Um número', ok: /\d/.test(senha) },
+    { texto: 'Um caractere especial', ok: /[^A-Za-z0-9]/.test(senha) },
   ];
-  const forca = senha.length === 0 ? 0 : requisitosSenha.every(Boolean) ? 3 : requisitosSenha.filter(Boolean).length >= 3 ? 2 : 1;
-  const forcaLabel = ['', 'Fraca', 'Em progresso', 'Forte'];
-  const forcaCor = ['', '#EF4444', '#F59E0B', '#10B981'];
+
+  const quantidadeOk = requisitos.filter(r => r.ok).length;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nome || !email || !senha) { setErro('Preencha todos os campos.'); return; }
-    if (senha !== confirmar) { setErro('As senhas nao coincidem.'); return; }
-    if (!senhaRegex.test(senha)) {
-      setErro('A senha deve ter no mínimo 8 caracteres, letras maiúsculas e minúsculas, número e caractere especial.');
+
+    if (!nome.trim() || !email.trim() || !senha || !confirmar) {
+      setErro('Preencha todos os campos.');
       return;
     }
+
+    if (!senhaValida(senha)) {
+      setErro('A senha não atende a todos os requisitos de segurança.');
+      return;
+    }
+
+    if (senha !== confirmar) {
+      setErro('As senhas não coincidem.');
+      return;
+    }
+
     setCarregando(true);
     setErro('');
+
     try {
       const ok = await registrar(nome, email, senha);
-      if (!ok) setErro('Nao foi possivel criar a conta. Tente novamente.');
+      if (!ok) setErro('Não foi possível criar a conta. Tente novamente.');
     } catch (err: any) {
-      setErro(err.message?.includes('ja esta cadastrado') ? 'Este e-mail ja esta cadastrado.' : 'Erro ao criar conta.');
+      setErro(
+        err.message?.includes('ja esta cadastrado')
+          ? 'Este e-mail já está cadastrado.'
+          : 'Erro ao criar conta.'
+      );
     } finally {
       setCarregando(false);
     }
@@ -55,7 +73,7 @@ export default function RegisterPage({ navigate }: Props) {
       <div className="auth-page__left">
         <div className="auth-page__brand">
           <Logo size="lg" variant="white" />
-          <p>Controle total sobre seus medicamentos e sua saude.</p>
+          <p>Controle total sobre seus medicamentos e sua saúde.</p>
         </div>
         <div className="auth-page__illustration">
           <div className="auth-orb auth-orb--1" />
@@ -72,51 +90,84 @@ export default function RegisterPage({ navigate }: Props) {
 
         <div className="auth-form-wrap">
           <div className="auth-form__header">
-            <h1>Criar conta gratis</h1>
-            <p>Comece a organizar sua saude agora</p>
+            <h1>Criar conta grátis</h1>
+            <p>Comece a organizar sua saúde agora</p>
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Nome completo</label>
-              <input type="text" placeholder="Seu nome" value={nome} onChange={e => setNome(e.target.value)} autoComplete="name" />
+              <input
+                type="text"
+                placeholder="Seu nome"
+                value={nome}
+                onChange={e => setNome(e.target.value)}
+                autoComplete="name"
+              />
             </div>
+
             <div className="form-group">
               <label>E-mail</label>
-              <input type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" />
+              <input
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                autoComplete="email"
+              />
             </div>
+
             <div className="form-group">
               <label>Senha</label>
               <div className="input-wrap">
                 <input
                   type={mostrarSenha ? 'text' : 'password'}
-                  placeholder="Mínimo 8 caracteres, letras, número e símbolo"
+                  placeholder="Crie uma senha segura"
                   value={senha}
                   onChange={e => setSenha(e.target.value)}
                   autoComplete="new-password"
                 />
-                <button type="button" className="input-eye" onClick={() => setMostrarSenha(!mostrarSenha)}>
+                <button
+                  type="button"
+                  className="input-eye"
+                  onClick={() => setMostrarSenha(!mostrarSenha)}
+                >
                   {mostrarSenha ? '🔒' : '🔓'}
                 </button>
               </div>
+
               {senha && (
-                <>
                 <div className="password-strength">
                   <div className="password-strength__bar">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className="password-strength__seg"
-                        style={{ background: i <= forca ? forcaCor[forca] : undefined }} />
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div
+                        key={i}
+                        className="password-strength__seg"
+                        style={{
+                          background: i <= quantidadeOk
+                            ? quantidadeOk <= 2 ? '#EF4444'
+                              : quantidadeOk <= 4 ? '#F59E0B'
+                              : '#10B981'
+                            : undefined,
+                        }}
+                      />
                     ))}
                   </div>
-                  <span style={{ color: forcaCor[forca] }}>{forcaLabel[forca]}</span>
+                  <span>
+                    {quantidadeOk === 5 ? 'Forte' : 'Senha incompleta'}
+                  </span>
                 </div>
-                <small className="form-hint">
-                  Use 8+ caracteres, uma letra maiúscula, uma minúscula, um número e um símbolo.
-                  {senhaValida ? ' Senha atende aos requisitos.' : ' Senha ainda não atende aos requisitos.'}
-                </small>
-                </>
               )}
+
+              <ul className="password-requirements">
+                {requisitos.map(r => (
+                  <li key={r.texto} style={{ color: r.ok ? '#10B981' : 'var(--text-muted)' }}>
+                    {r.ok ? '✓' : '○'} {r.texto}
+                  </li>
+                ))}
+              </ul>
             </div>
+
             <div className="form-group">
               <label>Confirmar senha</label>
               <input
@@ -140,12 +191,14 @@ export default function RegisterPage({ navigate }: Props) {
           </form>
 
           <p className="auth-form__footer">
-            Ja tem uma conta?{' '}
-            <button className="link-btn" onClick={() => navigate('login')}>Fazer login</button>
+            Já tem uma conta?{' '}
+            <button className="link-btn" onClick={() => navigate('login')}>
+              Fazer login
+            </button>
           </p>
 
           <button className="auth-back" onClick={() => navigate('landing')}>
-            Voltar ao inicio
+            Voltar ao início
           </button>
         </div>
       </div>
