@@ -1,3 +1,4 @@
+
 require('dotenv').config();
 
 const express = require('express');
@@ -20,105 +21,52 @@ const app = express();
 
 const PORTA = process.env.PORT || 3001;
 
-/*
-|--------------------------------------------------------------------------
-| Banco
-|--------------------------------------------------------------------------
-*/
+// CORS
+app.use(cors({
+  origin: '*',
+  methods: [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+  ],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+  ],
+}));
 
-conectarBanco();
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true }));
 
-/*
-|--------------------------------------------------------------------------
-| CORS
-|--------------------------------------------------------------------------
-*/
-
-app.use(
-  cors({
-    origin: '*',
-    methods: [
-      'GET',
-      'POST',
-      'PUT',
-      'PATCH',
-      'DELETE',
-      'OPTIONS',
-    ],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-    ],
-  })
-);
-
-/*
-|--------------------------------------------------------------------------
-| Body
-|--------------------------------------------------------------------------
-*/
-
-app.use(
-  express.json({
-    limit: '2mb',
-  })
-);
-
-app.use(
-  express.urlencoded({
-    extended: true,
-  })
-);
-
-/*
-|--------------------------------------------------------------------------
-| Rate limit
-|--------------------------------------------------------------------------
-*/
-
+// Rate limit geral
 const limitadorGeral = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
-
   standardHeaders: true,
   legacyHeaders: false,
-
   message: {
     sucesso: false,
-    mensagem:
-      'Muitas requisicoes. Tente novamente em 15 minutos.',
+    mensagem: 'Muitas requisicoes. Tente novamente em 15 minutos.',
   },
 });
 
-app.use(
-  '/api',
-  limitadorGeral
-);
+app.use('/api', limitadorGeral);
 
 const limitadorAuth = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
-
   standardHeaders: true,
   legacyHeaders: false,
-
   message: {
     sucesso: false,
-    mensagem:
-      'Muitas tentativas. Aguarde 15 minutos.',
+    mensagem: 'Muitas tentativas. Aguarde 15 minutos.',
   },
 });
 
-app.use(
-  '/api/auth',
-  limitadorAuth
-);
-
-/*
-|--------------------------------------------------------------------------
-| Health check
-|--------------------------------------------------------------------------
-*/
+app.use('/api/auth', limitadorAuth);
 
 app.get('/api/health', (req, res) => {
   res.json({
@@ -126,63 +74,32 @@ app.get('/api/health', (req, res) => {
     servico: 'MedSync API',
     versao: '1.0.0',
     horario: new Date().toISOString(),
-    ambiente:
-      process.env.NODE_ENV || 'development',
+    ambiente: process.env.NODE_ENV || 'development',
   });
 });
 
-/*
-|--------------------------------------------------------------------------
-| Rotas
-|--------------------------------------------------------------------------
-*/
-
-app.use(
-  '/api/auth',
-  rotasAuth
-);
-
-app.use(
-  '/api/usuarios',
-  rotasUsuarios
-);
-
-app.use(
-  '/api/medicamentos',
-  rotasMedicamentos
-);
-
-app.use(
-  '/api/registros',
-  rotasRegistros
-);
-
-/*
-|--------------------------------------------------------------------------
-| Erros
-|--------------------------------------------------------------------------
-*/
+app.use('/api/auth', rotasAuth);
+app.use('/api/usuarios', rotasUsuarios);
+app.use('/api/medicamentos', rotasMedicamentos);
+app.use('/api/registros', rotasRegistros);
 
 app.use(rotaNaoEncontrada);
-
 app.use(tratarErro);
 
-/*
-|--------------------------------------------------------------------------
-| Start
-|--------------------------------------------------------------------------
-*/
+async function iniciarServidor() {
+  try {
+    await conectarBanco();
 
-app.listen(PORTA, '0.0.0.0', () => {
-  console.log(
-    `MedSync API rodando na porta ${PORTA}`
-  );
+    app.listen(PORTA, '0.0.0.0', () => {
+      console.log(`MedSync API rodando na porta ${PORTA}`);
+      console.log(`Ambiente: ${process.env.NODE_ENV || 'development'}`);
+    });
+  } catch (erro) {
+    console.error('Falha ao iniciar o MedSync:', erro.message);
+    process.exit(1);
+  }
+}
 
-  console.log(
-    `Ambiente: ${
-      process.env.NODE_ENV || 'development'
-    }`
-  );
-});
+iniciarServidor();
 
 module.exports = app;

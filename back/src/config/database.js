@@ -1,23 +1,19 @@
+
 const mongoose = require('mongoose');
 
 require('dotenv').config();
 
 async function conectarBanco() {
-  const MONGODB_URI =
-    process.env.MONGODB_URI;
+  const MONGODB_URI = process.env.MONGODB_URI;
 
   if (!MONGODB_URI) {
-    console.error(
-      'Erro: MONGODB_URI não foi definida.'
-    );
-
-    process.exit(1);
+    throw new Error('MONGODB_URI não foi definida.');
   }
 
   try {
-    await mongoose.connect(
-      MONGODB_URI
-    );
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 15000,
+    });
 
     console.log(
       'Conexão com o MongoDB estabelecida com sucesso!'
@@ -28,9 +24,8 @@ async function conectarBanco() {
       erro.message
     );
 
-    process.exit(1);
+    throw erro;
   }
 }
 
-module.exports =
-  conectarBanco;
+module.exports = conectarBanco;
