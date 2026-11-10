@@ -302,6 +302,16 @@ const MedicamentoModel = {
       efeitosColaterais: 'efeitos_colaterais',
     };
 
+    // Campos opcionais: string vazia vira null (evita erro de cast em datas).
+    const camposOpcionais = new Set([
+      'dataTermino',
+      'instrucoes',
+      'urlImagem',
+      'medicoPrescritor',
+      'crm',
+      'efeitosColaterais',
+    ]);
+
     const atualizacao = {};
 
     for (const [chave, campo] of Object.entries(
@@ -309,7 +319,10 @@ const MedicamentoModel = {
     )) {
       if (dados[chave] === undefined) continue;
 
-      atualizacao[campo] = dados[chave];
+      atualizacao[campo] =
+        camposOpcionais.has(chave) && dados[chave] === ''
+          ? null
+          : dados[chave];
     }
 
     if (
@@ -328,7 +341,7 @@ const MedicamentoModel = {
           $set: atualizacao,
         },
         {
-          new: true,
+          returnDocument: 'after',
           runValidators: true,
         }
       );

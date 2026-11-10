@@ -2,11 +2,13 @@ const RegistroDoseModel = require('../models/LogModel');
 const MedicamentoModel = require('../models/MedicationModel');
 
 const RegistroDoseController = {
-
   async listar(req, res, next) {
     try {
-      const dias = parseInt(req.query.dias) || null;
-      const registros = await RegistroDoseModel.listarPorUsuario(req.usuario.id, { dias });
+      const dias = parseInt(req.query.dias, 10) || null;
+      const registros = await RegistroDoseModel.listarPorUsuario(
+        req.usuario.id,
+        { dias }
+      );
       return res.json({ sucesso: true, dados: registros });
     } catch (erro) {
       next(erro);
@@ -15,7 +17,11 @@ const RegistroDoseController = {
 
   async hoje(req, res, next) {
     try {
-      const registros = await RegistroDoseModel.listarHoje(req.usuario.id);
+      // ?data=AAAA-MM-DD é opcional (já validado na rota).
+      const registros = await RegistroDoseModel.listarHoje(
+        req.usuario.id,
+        req.query.data || null
+      );
       return res.json({ sucesso: true, dados: registros });
     } catch (erro) {
       next(erro);
@@ -24,9 +30,9 @@ const RegistroDoseController = {
 
   async adesao(req, res, next) {
     try {
-      const taxa7 = await RegistroDoseModel.taxaAdesao(req.usuario.id, 7);
-      const taxa30 = await RegistroDoseModel.taxaAdesao(req.usuario.id, 30);
-      return res.json({ sucesso: true, dados: { dias7: taxa7, dias30: taxa30 } });
+      const dias7 = await RegistroDoseModel.taxaAdesao(req.usuario.id, 7);
+      const dias30 = await RegistroDoseModel.taxaAdesao(req.usuario.id, 30);
+      return res.json({ sucesso: true, dados: { dias7, dias30 } });
     } catch (erro) {
       next(erro);
     }
@@ -34,11 +40,24 @@ const RegistroDoseController = {
 
   async salvar(req, res, next) {
     try {
-      const { medicamentoId, horarioAgendado, situacao, observacao } = req.body;
+      const {
+        medicamentoId,
+        horarioAgendado,
+        situacao,
+        observacao,
+        dataDose,
+      } = req.body;
 
-      const medicamento = await MedicamentoModel.buscarUm(medicamentoId, req.usuario.id);
+      const medicamento = await MedicamentoModel.buscarUm(
+        medicamentoId,
+        req.usuario.id
+      );
+
       if (!medicamento) {
-        return res.status(404).json({ sucesso: false, mensagem: 'Medicamento nao encontrado' });
+        return res.status(404).json({
+          sucesso: false,
+          mensagem: 'Medicamento nao encontrado',
+        });
       }
 
       const registro = await RegistroDoseModel.salvar(
@@ -46,9 +65,15 @@ const RegistroDoseController = {
         medicamentoId,
         horarioAgendado,
         situacao,
-        observacao || null
+        observacao || null,
+        dataDose || null
       );
-      return res.json({ sucesso: true, mensagem: 'Dose registrada', dados: registro });
+
+      return res.json({
+        sucesso: true,
+        mensagem: 'Dose registrada',
+        dados: registro,
+      });
     } catch (erro) {
       next(erro);
     }

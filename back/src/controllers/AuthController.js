@@ -1,4 +1,3 @@
-
 const jwt = require('jsonwebtoken');
 
 const UsuarioModel = require('../models/UserModel');
@@ -48,7 +47,7 @@ const AuthController = {
       if (existe) {
         return res.status(409).json({
           sucesso: false,
-          mensagem: 'Este e-mail já está cadastrado',
+          mensagem: 'Este e-mail ja esta cadastrado',
         });
       }
 
@@ -170,8 +169,6 @@ const AuthController = {
       const usuario =
         UsuarioModel.formatar(atualizado);
 
-      console.log('[PERFIL] Usuario atualizado:', usuario);
-
       return res.json({
         sucesso: true,
         mensagem: 'Perfil atualizado com sucesso',
@@ -218,7 +215,13 @@ const AuthController = {
           erroEmail.message
         );
 
-        if (process.env.NODE_ENV !== 'production') {
+        // O código só é devolvido na resposta se for pedido explicitamente
+        // (EXPOSE_DEV_TOKEN=true) e fora de produção. Caso contrário, qualquer
+        // pessoa poderia pedir a recuperação da conta de outra e já receber o código.
+        if (
+          process.env.NODE_ENV !== 'production' &&
+          process.env.EXPOSE_DEV_TOKEN === 'true'
+        ) {
           return res.json({
             sucesso: true,
             mensagem:

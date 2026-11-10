@@ -46,6 +46,34 @@ async function requisicao<T>(
   return dados as T;
 }
 
+const SITUACAO_PARA_FRONT: Record<string, string> = {
+  tomada: 'TOMADO',
+  perdida: 'PERDIDO',
+  pulada: 'PULADO',
+  pendente: 'PENDENTE',
+};
+
+function adaptarRegistro(registro: any): any {
+  if (!registro) return registro;
+
+  const situacao = String(registro.situacao ?? '').toLowerCase();
+
+  return {
+    ...registro,
+    situacao: SITUACAO_PARA_FRONT[situacao] ?? registro.situacao,
+    data: registro.dataDose ?? registro.data,
+  };
+}
+
+/* Data de hoje no fuso do navegador (AAAA-MM-DD), enviada ao backend. */
+function hojeLocal(): string {
+  const d = new Date();
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
+
 export const api = {
   auth: {
     registrar: (nome: string, email: string, senha: string) =>
@@ -125,15 +153,6 @@ export const api = {
   },
 
   usuarios: {
-    listarTodos: () =>
-      requisicao<{
-        total: number;
-        usuarios: any[];
-      }>(
-        'GET',
-        '/usuarios'
-      ),
-
     buscarPorId: (id: number | string) =>
       requisicao<{
         usuario: any;
@@ -187,7 +206,6 @@ export const api = {
         `/medicamentos/${id}`
       ),
 
-    
     alternar: (id: number | string) =>
       requisicao<{
         sucesso?: boolean;
@@ -197,7 +215,6 @@ export const api = {
         'PATCH',
         `/medicamentos/${id}/alternar`
       ),
-
   },
 
   registros: {
@@ -207,15 +224,21 @@ export const api = {
       }>(
         'GET',
         `/registros${dias ? `?dias=${dias}` : ''}`
-      ),
+      ).then((res) => ({
+        ...res,
+        dados: (res.dados || []).map(adaptarRegistro),
+      })),
 
     hoje: () =>
       requisicao<{
         dados: any[];
       }>(
         'GET',
-        '/registros/hoje'
-      ),
+        `/registros/hoje?data=${hojeLocal()}`
+      ).then((res) => ({
+        ...res,
+        dados: (res.dados || []).map(adaptarRegistro),
+      })),
 
     adesao: () =>
       requisicao<{
@@ -244,7 +267,11 @@ export const api = {
           horarioAgendado,
           situacao,
           observacao,
+          dataDose: hojeLocal(),
         }
-      ),
+      ).then((res) => ({
+        ...res,
+        dados: adaptarRegistro(res.dados),
+      })),
   },
 };

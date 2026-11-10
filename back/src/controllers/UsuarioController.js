@@ -1,30 +1,24 @@
-
-const UsuarioModel = require('../models/UserModel');
-
 const UsuarioController = {
-
+  /*
+   * Cada usuário só pode consultar o PRÓPRIO cadastro.
+   */
   async buscarPorId(req, res, next) {
     try {
-      const usuario = await UsuarioModel.buscarPorId(
-        req.params.id
-      );
-
-      if (!usuario) {
-        return res.status(404).json({
+      if (req.params.id !== req.usuarioId) {
+        return res.status(403).json({
           sucesso: false,
-          mensagem: 'Usuario nao encontrado',
+          mensagem: 'Acesso negado a este usuario',
         });
       }
 
       return res.json({
         sucesso: true,
-        usuario: UsuarioModel.formatar(usuario),
+        usuario: req.usuario,
       });
     } catch (erro) {
       next(erro);
     }
   },
-
 };
 
 module.exports = UsuarioController;

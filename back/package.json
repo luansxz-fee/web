@@ -1,7 +1,7 @@
 {
   "name": "medsync-backend",
   "version": "1.0.0",
-  "description": "API do MedSync com Node.js, Express e MySQL2",
+  "description": "API do MedSync com Node.js, Express e MongoDB (Mongoose)",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
@@ -18,11 +18,9 @@
     "express-validator": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.10.1",
-    "mysql2": "^3.9.7",
     "nodemailer": "^6.9.13"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4",
-    "vite": "^8.3.1"
+    "nodemon": "^3.1.4"
   }
 }

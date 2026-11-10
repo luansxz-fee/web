@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 
 const tokenSchema = new mongoose.Schema(
@@ -33,7 +34,7 @@ const TokenModel = {
   gerarCodigo() {
     const caracteres = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     return Array.from({ length: 8 }, () =>
-      caracteres[Math.floor(Math.random() * caracteres.length)]
+      caracteres[crypto.randomInt(caracteres.length)]
     ).join('');
   },
 

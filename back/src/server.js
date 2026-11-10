@@ -1,4 +1,3 @@
-
 require('dotenv').config();
 
 const express = require('express');
@@ -18,6 +17,10 @@ const {
 } = require('./middleware/errorHandler.js');
 
 const app = express();
+
+// Necessário atrás de proxy (Render, Heroku, Nginx) para o rate limit ler o IP real.
+app.set('trust proxy', 1);
+app.disable('x-powered-by');
 
 const PORTA = process.env.PORT || 3001;
 
@@ -66,7 +69,17 @@ const limitadorAuth = rateLimit({
   },
 });
 
-app.use('/api/auth', limitadorAuth);
+// Limite rígido apenas nas rotas sensíveis (força bruta / spam de e-mail).
+// Rotas como GET /api/auth/eu, chamada a cada abertura do app, não entram aqui.
+app.post(
+  [
+    '/api/auth/login',
+    '/api/auth/registrar',
+    '/api/auth/esqueci-senha',
+    '/api/auth/redefinir-senha',
+  ],
+  limitadorAuth
+);
 
 app.get('/api/health', (req, res) => {
   res.json({
